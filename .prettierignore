@@ -1,0 +1,9 @@
+node_modules
+dist
+pb_data
+.tools
+.test-data
+test-results
+playwright-report
+package-lock.json
+*.tsbuildinfo

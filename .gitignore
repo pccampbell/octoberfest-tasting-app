@@ -1,0 +1,10 @@
+node_modules/
+dist/
+pb_data/
+.tools/
+.test-data/
+test-results/
+playwright-report/
+.env
+*.log
+*.tsbuildinfo

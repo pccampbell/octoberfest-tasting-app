@@ -1,0 +1,56 @@
+[
+  {
+    "name": "Golden Festbier",
+    "brewery": "Sample · Alpenhaus",
+    "style": "Festbier",
+    "abv": 6.1,
+    "description": "Golden, gently malty, and made for a long evening at the table.",
+    "sort_order": 1,
+    "is_active": true
+  },
+  {
+    "name": "Autumn Märzen",
+    "brewery": "Sample · Waldbrau",
+    "style": "Märzen",
+    "abv": 5.8,
+    "description": "Toasted bread and a touch of caramel, wrapped in a rich amber pour.",
+    "sort_order": 2,
+    "is_active": true
+  },
+  {
+    "name": "Harvest Helles",
+    "brewery": "Sample · Sonnental",
+    "style": "Helles Lager",
+    "abv": 5.2,
+    "description": "Bright, balanced, and wonderfully crisp. A sunny little sip.",
+    "sort_order": 3,
+    "is_active": true
+  },
+  {
+    "name": "Bavarian Dunkel",
+    "brewery": "Sample · Alte Mühle",
+    "style": "Munich Dunkel",
+    "abv": 5.4,
+    "description": "Deep malt, a little cocoa, and a smooth finish worth lingering over.",
+    "sort_order": 4,
+    "is_active": true
+  },
+  {
+    "name": "Wheat & Wander",
+    "brewery": "Sample · Bergwiese",
+    "style": "Hefeweizen",
+    "abv": 5.5,
+    "description": "Soft wheat, bright fruit, and a playful hint of clove.",
+    "sort_order": 5,
+    "is_active": true
+  },
+  {
+    "name": "Evening Bock",
+    "brewery": "Sample · Hirschgarten",
+    "style": "Bock",
+    "abv": 6.8,
+    "description": "A full-bodied, warming finale with a lovely toasted malt character.",
+    "sort_order": 6,
+    "is_active": true
+  }
+]

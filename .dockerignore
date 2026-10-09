@@ -1,0 +1,13 @@
+node_modules
+dist
+.tools
+.test-data
+pb_data
+.env
+.git
+test-results
+playwright-report
+tests
+scripts
+sample-data
+*.log
