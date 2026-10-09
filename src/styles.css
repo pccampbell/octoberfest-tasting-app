@@ -1340,6 +1340,20 @@ fieldset {
   .champion-panel h2 {
     font-size: 42px;
   }
+  .stat span,
+  .rank-score span,
+  .rank-details p {
+    font-size: 13px;
+  }
+  .live-status,
+  .leaderboard-footnote,
+  .leaderboard-title > span {
+    font-size: 11px;
+  }
+  .champion-panel p.champion-note,
+  .results-heading .muted {
+    font-size: 15px;
+  }
 }
 @media (max-width: 900px) {
   .site-header {
