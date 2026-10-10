@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Beer, Crown, Maximize, Trophy, Users, Vote } from 'lucide-react';
 import { pb, friendlyError } from '../lib/pocketbase';
 import type { BeerResult, PartyStats } from '../lib/types';
-import { sortResults } from '../lib/utils';
+import { formatOrigin, sortResults } from '../lib/utils';
 import { Button } from '../components/ui/button';
 import { ErrorMessage, Loading } from '../components/Status';
+import { Leaderboard } from '../components/Leaderboard';
+import { OriginLeaderboard } from '../components/OriginLeaderboard';
 
 type Snapshot = { beers: BeerResult[]; stats: PartyStats; fetched: number };
 export function Results() {
@@ -112,75 +114,28 @@ export function Results() {
               </div>
             ))}
           </div>
-          {!revealed ? (
+          {!revealed && (
             <div className="reveal-screen">
               <Trophy size={58} />
               <h2>The suspense is brewing.</h2>
               <p>Keep sipping. The beer hall champion will be revealed soon.</p>
               <Button onClick={() => setRevealed(true)}>Reveal results</Button>
             </div>
-          ) : (
+          )}
+          <div hidden={!revealed}>
             <div className="leaderboard-layout">
-              <section className="leaderboard" aria-label="Beer leaderboard">
-                <div className="leaderboard-title">
-                  <h2>The leaderboard</h2>
-                  <span>AVERAGE / 10</span>
-                </div>
-                {!snapshot.beers.length && (
-                  <div className="empty-state">
-                    <Beer size={32} />
-                    <h3>The lineup is on its way.</h3>
-                    <p>The host can add beers to get the tasting started.</p>
-                  </div>
-                )}
-                {snapshot.beers.map((beer, i) => (
-                  <article
-                    className={`leaderboard-row ${i === 0 && beer.rating_count ? 'first-place' : ''}`}
-                    key={beer.id}
-                    data-testid={`result-${beer.name}`}
-                  >
-                    <span className="rank-number">
-                      {beer.rating_count ? String(i + 1).padStart(2, '0') : '—'}
-                    </span>
-                    <div className="rank-details">
-                      <h3>{beer.name}</h3>
-                      <p>
-                        {beer.brewery}
-                        {beer.rating_count > 0 && beer.rating_count < 3 && (
-                          <span className="provisional">Provisional</span>
-                        )}
-                      </p>
-                      <div className="score-bar">
-                        <span
-                          style={{
-                            width: `${beer.rating_count ? (beer.average_score ?? 0) * 10 : 0}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div className="rank-score">
-                      <strong>
-                        {beer.rating_count ? Number(beer.average_score).toFixed(1) : '—'}
-                      </strong>
-                      <span>
-                        {beer.rating_count
-                          ? `${beer.rating_count} ${beer.rating_count === 1 ? 'rating' : 'ratings'}`
-                          : 'Not yet rated'}
-                      </span>
-                    </div>
-                  </article>
-                ))}
-                <p className="leaderboard-footnote">
-                  Averages settle as more tasters join in. Provisional = fewer than 3 ratings.
-                </p>
-              </section>
+              <Leaderboard beers={snapshot.beers} />
               <aside className="champion-panel">
                 <Crown size={38} strokeWidth={1.3} />
                 <p className="eyebrow light">
                   {winner ? 'THE CURRENT CROWD FAVORITE' : 'A CHAMPION IS WAITING'}
                 </p>
                 <h2>{winner ? winner.name : 'Your next pour could be the one.'}</h2>
-                <p>{winner ? winner.brewery : 'Take a sip and cast the first score.'}</p>
+                <p>
+                  {winner
+                    ? [winner.brewery, formatOrigin(winner)].filter(Boolean).join(' · ')
+                    : 'Take a sip and cast the first score.'}
+                </p>
                 {winner ? (
                   <div className="champion-score">
                     {Number(winner.average_score).toFixed(1)}
@@ -197,7 +152,27 @@ export function Results() {
                 </p>
               </aside>
             </div>
-          )}
+            <section className="origin-comparison" aria-label="Compare origins">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">TWO ORIGINS. ONE TASTING TABLE.</p>
+                  <h2>
+                    Compare origins<span className="heading-star">✦</span>
+                  </h2>
+                </div>
+              </div>
+              <p className="origin-explanation">
+                Each rated beer has equal weight in its origin’s average. Unrated beers are
+                excluded.
+                {snapshot.beers.some((beer) => !beer.country) &&
+                  ' Beers without a country appear in the overall leaderboard only.'}
+              </p>
+              <div className="origin-grid">
+                <OriginLeaderboard beers={snapshot.beers} initialCountry="US" side="left" />
+                <OriginLeaderboard beers={snapshot.beers} initialCountry="Germany" side="right" />
+              </div>
+            </section>
+          </div>
         </>
       )}
     </main>

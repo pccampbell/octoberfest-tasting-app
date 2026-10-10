@@ -1,9 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { joinUrl, sortResults } from '../src/lib/utils';
+import { formatOrigin, joinUrl, originAverage, sortResults } from '../src/lib/utils';
 import type { BeerResult } from '../src/lib/types';
 
 const result = (id: string, name: string, average_score: number | null, rating_count: number) =>
   ({ id, name, average_score, rating_count }) as BeerResult;
+describe('origin comparisons', () => {
+  it('gives each rated beer equal weight despite unequal rating counts', () => {
+    expect(originAverage([result('a', 'Popular', 10, 3), result('b', 'New pour', 2, 1)])).toBe(6);
+  });
+  it('excludes unrated beers and keeps full precision until display', () => {
+    expect(originAverage([result('a', 'Rated', 7.12345, 3), result('b', 'Unrated', 0, 0)])).toBe(
+      7.12345,
+    );
+  });
+  it('shows no average for an empty or entirely unrated origin', () => {
+    expect(originAverage([])).toBeNull();
+    expect(originAverage([result('a', 'Unrated', null, 0)])).toBeNull();
+  });
+  it('shows a state only for US beers and accepts missing origins', () => {
+    expect(formatOrigin({ country: 'US', state: ' Wisconsin ' })).toBe('US - Wisconsin');
+    expect(formatOrigin({ country: 'US', state: '' })).toBe('US');
+    expect(formatOrigin({ country: 'Germany', state: '' })).toBe('Germany');
+    expect(formatOrigin({ country: 'Germany', state: 'Bavaria' })).toBe('Germany');
+    expect(formatOrigin({ country: '', state: '' })).toBe('');
+  });
+});
 describe('leaderboard order', () => {
   it('sorts by average, rating count, name, then stable ID and keeps unrated beers last', () => {
     const beers = [

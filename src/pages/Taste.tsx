@@ -11,7 +11,8 @@ import {
 import { useSession } from '../lib/session';
 import { pb, friendlyError, withGuest } from '../lib/pocketbase';
 import type { Beer, Rating } from '../lib/types';
-import { Stein, BeerLabel } from '../components/Illustration';
+import { formatOrigin } from '../lib/utils';
+import { BeerPoster, BeerLabel } from '../components/Illustration';
 import { Button } from '../components/ui/button';
 import { ErrorMessage, Loading } from '../components/Status';
 import { RatingDialog } from '../components/RatingDialog';
@@ -26,6 +27,7 @@ export function Taste() {
   const [filter, setFilter] = useState<Filter>('all');
   const [selected, setSelected] = useState<Beer | null>(null);
   const [notice, setNotice] = useState('');
+  const [expandedNotes, setExpandedNotes] = useState<string[]>([]);
   const load = useCallback(async () => {
     try {
       const [lineup, mine] = await Promise.all([
@@ -73,6 +75,12 @@ export function Taste() {
     setRatings((current) => [...current.filter((r) => r.beer !== rating.beer), rating]);
     setNotice(`Saved! ${selected?.name} · ${rating.score}/10`);
     setSelected(null);
+    setExpandedNotes((current) => current.filter((id) => id !== rating.beer));
+  }
+  function toggleNotes(id: string) {
+    setExpandedNotes((current) =>
+      current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
+    );
   }
   return (
     <main className="page tasting-page">
@@ -92,7 +100,7 @@ export function Taste() {
             <BeerIcon size={15} /> {beers.length} beers. One very good evening.
           </span>
         </div>
-        <Stein className="tasting-stein" />
+        <BeerPoster className="tasting-poster" />
         <div className="hero-corner top-left" />
         <div className="hero-corner bottom-right" />
       </section>
@@ -197,8 +205,24 @@ export function Taste() {
             {visible.map((beer, position) => {
               const rating = ratingFor(beer.id);
               const index = beers.findIndex((b) => b.id === beer.id);
+              const hasNotes = Boolean(rating?.notes.trim());
+              const notesOpen = expandedNotes.includes(beer.id);
               return (
-                <article className={`beer-card ${rating ? 'is-rated' : ''}`} key={beer.id}>
+                <article
+                  className={`beer-card ${rating ? 'is-rated' : ''} ${hasNotes ? 'has-notes' : ''}`}
+                  key={beer.id}
+                  onClick={
+                    hasNotes
+                      ? (e) => {
+                          if (
+                            window.matchMedia('(max-width: 680px)').matches &&
+                            !(e.target as HTMLElement).closest('button, a, .mobile-rating-notes')
+                          )
+                            toggleNotes(beer.id);
+                        }
+                      : undefined
+                  }
+                >
                   <div className="beer-picture">
                     {beer.image ? (
                       <img
@@ -226,27 +250,27 @@ export function Taste() {
                     )}
                   </div>
                   <div className="beer-card-body">
-                    <p className="brewery">{beer.brewery || 'THE EVENING’S SELECTION'}</p>
-                    <h3>{beer.name}</h3>
-                    <div className="beer-meta">
-                      <span>{beer.style || 'Beer'}</span>
-                      {beer.abv > 0 && (
-                        <>
-                          <span className="meta-dot">•</span>
-                          <span>{beer.abv}% ABV</span>
-                        </>
-                      )}
+                    <div className="beer-details">
+                      {beer.brewery && <p className="brewery">{beer.brewery}</p>}
+                      <h3>{beer.name}</h3>
+                      <div className="beer-meta">
+                        <span>{beer.style || 'Beer'}</span>
+                        {beer.abv > 0 && (
+                          <>
+                            <span className="meta-dot">•</span>
+                            <span>{beer.abv}% ABV</span>
+                          </>
+                        )}
+                      </div>
+                      {beer.country && <p className="beer-origin">{formatOrigin(beer)}</p>}
                     </div>
-                    {filter !== 'rankings' && (
-                      <p className="beer-description">
-                        {beer.description ||
-                          'A new pour to explore. Give it a sip and let your taste do the talking.'}
-                      </p>
+                    {filter !== 'rankings' && beer.description && (
+                      <p className="beer-description">{beer.description}</p>
                     )}
                     {rating && (
                       <div className="my-rating">
                         <span>
-                          Your score{' '}
+                          <span className="rating-caption">Your score </span>
                           <strong>
                             {rating.score}
                             <small>/10</small>
@@ -255,16 +279,36 @@ export function Taste() {
                         {rating.notes && <p>{rating.notes}</p>}
                       </div>
                     )}
-                    <Button
-                      variant={rating ? 'outline' : 'default'}
-                      className="full-width rate-button"
-                      onClick={() => setSelected(beer)}
-                      aria-label={`${rating ? 'Edit rating for' : 'Rate'} ${beer.name}`}
-                    >
-                      {rating ? 'Revisit your rating' : 'Taste & rate'}
-                      <ArrowRight size={16} />
-                    </Button>
+                    <div className="beer-actions">
+                      <Button
+                        variant={rating ? 'outline' : 'default'}
+                        className="full-width rate-button"
+                        onClick={() => setSelected(beer)}
+                        aria-label={`${rating ? 'Edit rating for' : 'Rate'} ${beer.name}`}
+                      >
+                        <span className="rate-label">
+                          {rating ? 'Revisit your rating' : 'Taste & rate'}
+                        </span>
+                        <span className="rate-label-short">{rating ? 'Edit' : 'Rate'}</span>
+                        <ArrowRight size={16} />
+                      </Button>
+                      {hasNotes && (
+                        <button
+                          className="notes-toggle"
+                          type="button"
+                          aria-label={`${notesOpen ? 'Hide' : 'Show'} notes for ${beer.name}`}
+                          aria-expanded={notesOpen}
+                          aria-controls={`notes-${beer.id}`}
+                          onClick={() => toggleNotes(beer.id)}
+                        />
+                      )}
+                    </div>
                   </div>
+                  {hasNotes && (
+                    <p className="mobile-rating-notes" id={`notes-${beer.id}`} hidden={!notesOpen}>
+                      {rating!.notes}
+                    </p>
+                  )}
                 </article>
               );
             })}
@@ -287,6 +331,7 @@ export function Taste() {
             setRatings((current) => current.filter((r) => r.id !== id));
             setNotice('Rating cleared. Ready for a fresh sip.');
             setSelected(null);
+            setExpandedNotes((current) => current.filter((id) => id !== selected?.id));
           }}
         />
       )}

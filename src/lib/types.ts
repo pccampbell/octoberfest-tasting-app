@@ -3,7 +3,12 @@ import type { RecordModel } from 'pocketbase';
 export interface Guest extends RecordModel {
   display_name: string;
 }
-export interface Beer extends RecordModel {
+export type Country = 'US' | 'Germany';
+export interface BeerOrigin {
+  country: Country | '';
+  state: string;
+}
+export interface Beer extends RecordModel, BeerOrigin {
   name: string;
   brewery: string;
   style: string;
@@ -19,7 +24,7 @@ export interface Rating extends RecordModel {
   score: number;
   notes: string;
 }
-export interface BeerResult extends RecordModel {
+export interface BeerResult extends RecordModel, BeerOrigin {
   name: string;
   brewery: string;
   style: string;

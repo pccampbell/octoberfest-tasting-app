@@ -40,6 +40,8 @@ async function rate(page: Page, name: string, score: number, notes: string) {
 test.beforeAll(async () => {
   const credentials = JSON.parse(await readFile('.test-data/test-admin.json', 'utf8'));
   await admin.collection('_superusers').authWithPassword(credentials.email, credentials.password);
+  // Unrelated browser scenarios share one IP and exceed normal guest activity.
+  await admin.settings.update({ rateLimits: { enabled: false } });
 });
 test.beforeEach(async () => {
   for (const collection of ['ratings', 'guests', 'beers']) {
@@ -52,6 +54,8 @@ test.beforeEach(async () => {
       await admin.collection('beers').create({
         name,
         brewery: 'Test brewery',
+        country: i === 1 ? 'Germany' : 'US',
+        state: i === 1 ? '' : i === 0 ? 'Wisconsin' : 'Minnesota',
         style: 'Festbier',
         abv: 6.1,
         sort_order: i,
@@ -182,11 +186,12 @@ test('three independent browsers persist and edit ratings; dashboard calculates 
     await expect(page.getByTestId('result-Harvest Helles')).toContainText('Not yet rated');
     await expect(page.locator('.stat').nth(0)).toContainText('3');
     await expect(page.locator('.stat').nth(1)).toContainText('6');
-    expect(await page.locator('.leaderboard-row h3').allTextContents()).toEqual([
-      'Golden Festbier',
-      'Autumn Märzen',
-      'Harvest Helles',
-    ]);
+    expect(
+      await page
+        .getByRole('region', { name: 'Beer leaderboard', exact: true })
+        .locator('.leaderboard-row h3')
+        .allTextContents(),
+    ).toEqual(['Golden Festbier', 'Autumn Märzen', 'Harvest Helles']);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
@@ -438,4 +443,187 @@ test('a missing old identity shows an error and never registers a silent replace
   await expect(page.getByRole('alert')).toBeVisible();
   expect(await admin.collection('guests').getFullList()).toHaveLength(0);
   await expect(page.getByRole('button', { name: 'Join the Tasting' })).not.toBeVisible();
+});
+
+test('deleting one Peter invalidates its device on navigation without mixing the other Peter’s ratings', async ({
+  browser,
+  page,
+}) => {
+  const otherContext = await browser.newContext();
+  try {
+    await join(page, 'Peter');
+    await page.locator('.guest-chip').click();
+    await expect(page.getByRole('link', { name: 'Continue as Peter' })).toBeVisible();
+    await page.getByText('Device guest details', { exact: true }).click();
+    const firstId = (await page.locator('.guest-details code').textContent())!;
+    await page.getByRole('link', { name: 'Continue as Peter' }).click();
+    await expect(page.locator('.beer-card')).toHaveCount(3);
+
+    const otherPage = await otherContext.newPage();
+    await join(otherPage, 'Peter');
+    await rate(otherPage, 'Golden Festbier', 7, 'The other Peter’s private note');
+    await otherPage.locator('.guest-chip').click();
+    await expect(otherPage.getByRole('link', { name: 'Continue as Peter' })).toBeVisible();
+    await otherPage.getByText('Device guest details', { exact: true }).click();
+    const otherId = (await otherPage.locator('.guest-details code').textContent())!;
+    expect(firstId).not.toBe(otherId);
+
+    await admin.collection('guests').delete(firstId);
+    await page.locator('.guest-chip').click();
+    await expect(page.getByRole('alert')).toContainText('saved guest can no longer sign in');
+    await expect(page.getByRole('link', { name: 'Continue as Peter' })).not.toBeVisible();
+    expect((await admin.collection('guests').getFullList()).map((g) => g.id)).toEqual([otherId]);
+
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.getByRole('button', { name: 'Start a new guest session' }).click();
+    await page.getByLabel('What should we call you?').fill('Peter');
+    await page.getByRole('button', { name: 'Join the Tasting' }).click();
+    await expect(page.locator('.beer-card')).toHaveCount(3);
+    await expect(page.locator('.progress-right')).toContainText('0 of 3 beers tasted');
+    await expect(page.getByText('The other Peter’s private note')).not.toBeVisible();
+    expect(await admin.collection('guests').getFullList()).toHaveLength(2);
+    expect(await admin.collection('ratings').getFullList()).toHaveLength(1);
+
+    await otherPage.reload();
+    await expect(otherPage.getByRole('link', { name: 'Continue as Peter' })).toBeVisible();
+    await otherPage.getByRole('link', { name: 'Continue as Peter' }).click();
+    await expect(
+      otherPage.locator('.beer-card').filter({ hasText: 'Golden Festbier' }),
+    ).toContainText('The other Peter’s private note');
+  } finally {
+    await otherContext.close();
+  }
+});
+
+test('returning focus to Join rechecks a guest deleted while that page was open', async ({
+  page,
+}) => {
+  await join(page, 'Peter');
+  await page.locator('.guest-chip').click();
+  await expect(page.getByRole('link', { name: 'Continue as Peter' })).toBeVisible();
+  const guest = (await admin.collection('guests').getFullList())[0];
+  await admin.collection('guests').delete(guest.id);
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(page.getByRole('alert')).toContainText('saved guest can no longer sign in');
+  await expect(page.getByRole('link', { name: 'Continue as Peter' })).not.toBeVisible();
+  expect(await admin.collection('guests').getFullList()).toHaveLength(0);
+});
+
+test('a network failure during session rechecking preserves the identity and offers no reset', async ({
+  page,
+}) => {
+  await join(page, 'Peter');
+  await page.locator('.guest-chip').click();
+  await expect(page.getByRole('link', { name: 'Continue as Peter' })).toBeVisible();
+  const originalIdentity = await page.evaluate((key) => localStorage.getItem(key), identityKey);
+  await page.route('**/api/collections/guests/auth-refresh', (route) => route.abort('failed'));
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(page.getByRole('alert')).toContainText('Check your connection');
+  await expect(page.getByRole('button', { name: 'Start a new guest session' })).not.toBeVisible();
+  expect(await page.evaluate((key) => localStorage.getItem(key), identityKey)).toBe(
+    originalIdentity,
+  );
+  expect(await admin.collection('guests').getFullList()).toHaveLength(1);
+  await page.unroute('**/api/collections/guests/auth-refresh');
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.getByRole('link', { name: 'Continue as Peter' })).toBeVisible();
+  await expect(page.getByRole('alert')).not.toBeVisible();
+  expect(await admin.collection('guests').getFullList()).toHaveLength(1);
+});
+
+test('origin boards compare equal-weight beer averages, support state filters, and preserve overall results', async ({
+  page,
+}) => {
+  await join(page, 'Origin taster');
+  await expect(page.locator('.beer-card').filter({ hasText: 'Golden Festbier' })).toContainText(
+    'US - Wisconsin',
+  );
+  await expect(page.locator('.beer-card').filter({ hasText: 'Autumn Märzen' })).toContainText(
+    'Germany',
+  );
+  await page.getByRole('button', { name: 'Rate Golden Festbier', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('US - Wisconsin');
+  await page.keyboard.press('Escape');
+  await expect(
+    admin.collection('beers').update(beers[0].id, { country: 'Canada' }),
+  ).rejects.toMatchObject({ status: 400 });
+  await expect(
+    admin.collection('beers').update(beers[0].id, { state: 'x'.repeat(81) }),
+  ).rejects.toMatchObject({ status: 400 });
+
+  const guests = [await guest('A'), await guest('B'), await guest('C')];
+  for (const pb of guests)
+    await pb
+      .collection('ratings')
+      .create({ guest: pb.authStore.record!.id, beer: beers[0].id, score: 10 });
+  const a = guests[0];
+  const createRating = (beer: string, score: number) =>
+    a.collection('ratings').create({ guest: a.authStore.record!.id, beer, score });
+  const germanRating = await createRating(beers[1].id, 8);
+  await createRating(beers[2].id, 2);
+  const unrated = await admin
+    .collection('beers')
+    .create({ name: 'Unrated US pour', country: 'US', state: 'Wisconsin', is_active: true });
+  const unknown = await admin
+    .collection('beers')
+    .create({ name: 'Unassigned origin', is_active: true });
+  await createRating(unknown.id, 9);
+  const inactive = await admin
+    .collection('beers')
+    .create({ name: 'Inactive German pour', country: 'Germany', is_active: true });
+  await createRating(inactive.id, 10);
+  await admin.collection('beers').update(inactive.id, { is_active: false });
+
+  await page.goto('/results');
+  const left = page.getByTestId('origin-left');
+  const right = page.getByTestId('origin-right');
+  const overall = page.getByRole('region', { name: 'Beer leaderboard', exact: true });
+  await expect(left.locator('.origin-average strong')).toHaveText('6.0');
+  await expect(right.locator('.origin-average strong')).toHaveText('8.0');
+  await expect(left.locator('.origin-summary')).toContainText('2 of 3 beers rated · 4 ratings');
+  await expect(overall.locator('.leaderboard-row')).toHaveCount(5);
+  await expect(overall).toContainText('Unassigned origin');
+  await expect(right).not.toContainText('Inactive German pour');
+  await expect(left).not.toContainText('Unassigned origin');
+  await expect(left.locator('.leaderboard-row h3')).toHaveText([
+    'Golden Festbier',
+    'Harvest Helles',
+    unrated.name,
+  ]);
+
+  await page
+    .getByRole('combobox', { name: 'State for left leaderboard' })
+    .selectOption('Wisconsin');
+  await expect(left.locator('.origin-average strong')).toHaveText('10.0');
+  await expect(left.locator('.leaderboard-row')).toHaveCount(2);
+  await page.getByRole('combobox', { name: 'Country for right leaderboard' }).selectOption('US');
+  await page
+    .getByRole('combobox', { name: 'State for right leaderboard' })
+    .selectOption('Minnesota');
+  await expect(right.locator('.origin-average strong')).toHaveText('2.0');
+  await page
+    .getByRole('combobox', { name: 'Country for left leaderboard' })
+    .selectOption('Germany');
+  await expect(
+    page.getByRole('combobox', { name: 'State for left leaderboard' }),
+  ).not.toBeVisible();
+  await a.collection('ratings').update(germanRating.id, { score: 6 });
+  await expect(left.locator('.origin-average strong')).toHaveText('6.0');
+  await expect(right.locator('.origin-average strong')).toHaveText('2.0');
+  await page.screenshot({ path: 'test-results/origin-results-desktop.png', fullPage: true });
+
+  await page.setViewportSize({ width: 320, height: 780 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const leftBox = (await left.boundingBox())!;
+  const rightBox = (await right.boundingBox())!;
+  expect(rightBox.y).toBeGreaterThan(leftBox.y + leftBox.height);
+  await page.screenshot({ path: 'test-results/origin-results-mobile.png', fullPage: true });
+  await page.getByRole('button', { name: 'Hide rankings' }).click();
+  await expect(left).not.toBeVisible();
+  await expect(right).not.toBeVisible();
+  await page.getByRole('button', { name: 'Reveal results' }).last().click();
+  await expect(page.getByTestId('origin-left').locator('.origin-average strong')).toHaveText('6.0');
+  await expect(page.getByTestId('origin-right').locator('.origin-average strong')).toHaveText(
+    '2.0',
+  );
 });

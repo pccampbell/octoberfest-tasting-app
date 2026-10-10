@@ -4,6 +4,19 @@ import type { Guest, Rating } from './types';
 export const pb = new PocketBase(import.meta.env.VITE_POCKETBASE_URL || window.location.origin);
 pb.autoCancellation(false);
 export const identityKey = 'oktoberfest.identity.v1';
+export class GuestIdentityUnavailableError extends Error {
+  constructor() {
+    super(
+      'This browser’s saved guest can no longer sign in. The host may have removed or changed it.',
+    );
+    this.name = 'GuestIdentityUnavailableError';
+  }
+}
+
+export function clearGuestIdentity() {
+  localStorage.removeItem(identityKey);
+  pb.authStore.clear();
+}
 type Identity = {
   email: string;
   secret: string;
@@ -70,6 +83,10 @@ async function restore(): Promise<Guest | null> {
   try {
     return await authenticate(identity);
   } catch (error) {
+    if (identity.registered && error instanceof ClientResponseError && error.status === 400) {
+      pb.authStore.clear();
+      throw new GuestIdentityUnavailableError();
+    }
     if (identity.registered || !(error instanceof ClientResponseError) || error.status !== 400)
       throw error;
   }

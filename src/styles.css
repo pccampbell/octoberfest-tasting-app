@@ -26,8 +26,7 @@
 body {
   margin: 0;
   min-width: 320px;
-  background-image: radial-gradient(#9a7d4b0d 0.7px, transparent 0.7px);
-  background-size: 5px 5px;
+  background-image: url('/print-grain.svg');
 }
 button,
 input,
@@ -75,6 +74,7 @@ textarea {
 }
 .festival-strip {
   background: #244333;
+  background-image: url('/print-grain.svg');
   text-align: center;
   color: #eddfbd;
   padding: 9px 12px;
@@ -93,7 +93,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 25px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 3px double var(--border);
 }
 .brand {
   display: flex;
@@ -108,7 +108,7 @@ textarea {
 .brand-mark {
   width: 46px;
   height: 46px;
-  border: 1px solid #c4a86f;
+  border: 3px double #c4a86f;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -197,15 +197,9 @@ textarea {
   position: relative;
   overflow: hidden;
   background: #244333;
-  background-image: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 35px,
-    #ffffff02 35px,
-    #ffffff02 36px
-  );
+  background-image: url('/print-grain.svg');
   color: #f7eed8;
-  border-radius: 6px;
+  border-radius: 2px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -239,9 +233,42 @@ textarea {
   letter-spacing: 2px;
   margin-top: 25px;
 }
-.hero-stein {
-  width: 350px;
-  max-width: 44%;
+.beer-poster {
+  margin: 0;
+  padding: 16px;
+  background: #f5e9d2 url('/print-grain.svg');
+  border: 4px double #244333;
+  outline: 1px solid #d9b568;
+  outline-offset: 3px;
+  color: #244333;
+  text-align: center;
+  box-shadow: 5px 5px 0 #10291d66;
+  flex-shrink: 0;
+}
+.poster-kicker {
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #b69a64;
+}
+.beer-poster img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 8px auto;
+}
+.beer-poster figcaption {
+  font-family: var(--font-serif);
+  font-size: clamp(18px, 2.5vw, 30px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.5px;
+}
+.welcome-poster {
+  width: 275px;
+  max-width: 36%;
+  margin: 0 15px;
 }
 .hero-corner {
   position: absolute;
@@ -375,6 +402,23 @@ textarea::placeholder {
   text-align: center;
   font-size: 10px;
 }
+.guest-details {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.guest-details summary {
+  cursor: pointer;
+  min-height: 36px;
+  padding: 8px 0;
+}
+.guest-details p {
+  margin-top: 7px;
+}
+.guest-details code {
+  color: var(--primary);
+}
 .how-it-works {
   padding-top: 12px;
 }
@@ -442,9 +486,17 @@ textarea::placeholder {
 .tasting-hero > div > p:not(.eyebrow) {
   margin: 13px 0 18px;
 }
-.tasting-stein {
-  width: 276px;
-  margin: -20px 30px -20px 0;
+.tasting-poster {
+  width: 175px;
+  max-width: 27%;
+  margin: 0 35px;
+  padding: 11px;
+}
+.tasting-poster figcaption {
+  font-size: 20px;
+}
+.tasting-poster .poster-kicker {
+  font-size: 6px;
 }
 .hero-pill {
   display: inline-flex;
@@ -591,7 +643,7 @@ progress::-moz-progress-bar {
 .beer-card {
   background: #fffcf6;
   border: 1px solid #dfd1b6;
-  border-radius: 6px;
+  border-radius: 2px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -604,10 +656,11 @@ progress::-moz-progress-bar {
   transform: translateY(-2px);
 }
 .beer-card.is-rated {
+  background-color: #eeefec;
   border-color: #a5b195;
 }
 .beer-picture {
-  height: 180px;
+  height: 150px;
   position: relative;
   border-bottom: 1px solid #e5d8bf;
   overflow: hidden;
@@ -644,54 +697,45 @@ progress::-moz-progress-bar {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse, #fcf7ed 0%, #e7dcc5 100%);
-  color: var(--label-color);
+  background: var(--label-color) url('/print-grain.svg');
+  color: #f5e9d2;
   position: relative;
 }
 .beer-art::before,
 .beer-art::after {
-  content: '❧';
+  content: '';
   position: absolute;
-  font-family: Georgia, serif;
-  font-size: 75px;
-  opacity: 0.2;
-  left: calc(50% - 115px);
-  top: 60px;
-  transform: rotate(-55deg);
+  inset: 8px;
+  border: 1px solid #f5e9d259;
+  pointer-events: none;
 }
 .beer-art::after {
-  left: auto;
-  right: calc(50% - 115px);
-  transform: scaleX(-1) rotate(-55deg);
-}
-.label-ornament {
-  font-size: 7px;
-  letter-spacing: 2px;
-  position: absolute;
-  top: 18px;
+  inset: 12px;
+  border-color: #f5e9d226;
 }
 .bottle-label {
-  margin-top: 8px;
-  width: 103px;
-  height: 126px;
-  border: 3px double var(--label-color);
-  border-radius: 44px 44px 4px 4px;
+  margin-top: 12px;
+  width: 86px;
+  height: 91px;
+  border: 3px double #f5e9d2;
+  border-radius: 45% 45% 2px 2px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #f8efd9;
-  outline: 1px solid #c7af81;
+  background: #f5e9d2 url('/print-grain.svg');
+  color: var(--label-color);
+  outline: 1px solid #f5e9d28c;
   outline-offset: 4px;
 }
 .label-top {
-  font-size: 8px;
-  letter-spacing: 1.5px;
+  font-size: 6px;
+  letter-spacing: 1px;
   border-bottom: 1px solid #bd9d62;
   padding-bottom: 4px;
 }
 .label-monogram {
-  font-size: 54px;
+  font-size: 42px;
   line-height: 1.1;
   font-family: var(--font-serif);
 }
@@ -702,9 +746,8 @@ progress::-moz-progress-bar {
   padding-top: 4px;
 }
 .art-number {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 11px;
+  font-size: 7px;
+  letter-spacing: 1.5px;
   margin-top: 9px;
 }
 .beer-card-body {
@@ -712,6 +755,16 @@ progress::-moz-progress-bar {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+.beer-details {
+  min-width: 0;
+  margin-bottom: 18px;
+}
+.beer-origin {
+  font-size: 11px;
+  color: var(--primary);
+  font-weight: 600;
+  margin-top: 6px;
 }
 .brewery {
   font-size: 9px;
@@ -741,7 +794,7 @@ progress::-moz-progress-bar {
   font-size: 12px;
   line-height: 1.7;
   color: #736856;
-  margin-top: 12px;
+  margin-top: 0;
   margin-bottom: 18px;
 }
 .rate-button {
@@ -749,10 +802,20 @@ progress::-moz-progress-bar {
   font-size: 11px;
   justify-content: space-between;
 }
+.rate-label-short {
+  display: none;
+}
+.beer-actions {
+  display: contents;
+}
+.notes-toggle,
+.mobile-rating-notes {
+  display: none;
+}
 .my-rating {
   border-top: 1px solid #e3d8c1;
   padding: 11px 0 15px;
-  margin-top: 13px;
+  margin-top: 0;
 }
 .my-rating > span {
   display: flex;
@@ -964,6 +1027,13 @@ fieldset {
   font-size: 10px;
   margin: 5px 0 17px;
 }
+.dialog-beer-description {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
 .clear-rating {
   margin-top: 8px;
   font-size: 11px;
@@ -1102,15 +1172,6 @@ fieldset {
   color: #736856;
   margin: 5px 0 11px;
 }
-.provisional {
-  display: inline-block;
-  margin-left: 8px;
-  font-size: 8px;
-  border: 1px solid #d9c29a;
-  border-radius: 3px;
-  color: #8d6d35;
-  padding: 1px 5px;
-}
 .score-bar {
   height: 5px;
   border-radius: 3px;
@@ -1151,14 +1212,81 @@ fieldset {
   color: #8b7c64;
   line-height: 1.6;
 }
+.origin-comparison {
+  margin-top: 38px;
+}
+.origin-explanation {
+  margin: 12px 0 20px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.origin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+.origin-panel {
+  min-width: 0;
+}
+.origin-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+.origin-controls label {
+  font-size: 11px;
+  margin: 0;
+}
+.origin-controls select {
+  font: inherit;
+  color: var(--primary);
+  background: #fffaf0;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  margin-top: 6px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+}
+.origin-summary {
+  margin: 18px 0 0;
+  padding: 22px 16px;
+  text-align: center;
+  color: var(--primary);
+  background: #eee7d7 url('/print-grain.svg');
+  border: 3px double #d3bc94;
+}
+.origin-summary .eyebrow {
+  margin-bottom: 6px;
+}
+.origin-average strong {
+  font-family: var(--font-serif);
+  font-size: 64px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+.origin-average span {
+  font-size: 16px;
+  color: var(--muted);
+  margin-left: 6px;
+}
+.origin-summary > p:last-child {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
 .champion-panel {
   background: #244333;
+  background-image: url('/print-grain.svg');
   color: #f4e8cc;
   border: 1px solid #244333;
   box-shadow:
     inset 0 0 0 7px #244333,
     inset 0 0 0 8px #d9b5684d;
-  border-radius: 5px;
+  border-radius: 2px;
   padding: 34px 28px;
   text-align: center;
 }
@@ -1247,8 +1375,9 @@ fieldset {
 }
 .qr-welcome {
   background: #244333;
+  background-image: url('/print-grain.svg');
   padding: 48px 60px;
-  border-radius: 6px;
+  border-radius: 2px;
   display: grid;
   grid-template-columns: 1fr 0.9fr;
   gap: 50px;
@@ -1272,9 +1401,13 @@ fieldset {
   margin-top: 20px;
   color: #e3d8bd;
 }
-.qr-stein {
-  width: 230px;
-  margin: 10px auto -10px;
+.qr-poster {
+  width: 210px;
+  max-width: 80%;
+  margin: 25px auto 0;
+}
+.qr-poster figcaption {
+  font-size: 22px;
 }
 .qr-card {
   background: #fcf6e7;
@@ -1317,6 +1450,20 @@ fieldset {
 }
 .qr-card .button {
   margin-top: 12px;
+}
+.join-card,
+.beer-card,
+.leaderboard,
+.qr-card,
+.stat,
+.dialog-content {
+  background-image: url('/print-grain.svg');
+  border-radius: 2px;
+}
+.join-card,
+.leaderboard,
+.qr-card {
+  border-top: 3px double #b39865;
 }
 @media (min-width: 1550px) {
   .results-page {
@@ -1462,11 +1609,12 @@ fieldset {
     font-size: 8px;
     letter-spacing: 1.2px;
   }
-  .hero-stein {
+  .welcome-poster {
     max-width: none;
-    width: 220px;
+    width: 175px;
     align-self: center;
-    margin: 15px 0 -15px;
+    margin: 22px 0 0;
+    padding: 11px;
   }
   .hero-signoff {
     font-size: 8px;
@@ -1489,11 +1637,14 @@ fieldset {
     max-width: none;
   }
   .tasting-hero {
-    padding: 30px 25px;
-    min-height: 270px;
+    padding: 24px 20px;
+    min-height: 0;
+  }
+  .tasting-hero > div:first-child {
+    padding-right: 65px;
   }
   .tasting-hero h1 {
-    font-size: 34px;
+    font-size: 27px;
     position: relative;
     z-index: 1;
   }
@@ -1502,29 +1653,36 @@ fieldset {
     letter-spacing: 1.2px;
   }
   .tasting-hero > div > p:not(.eyebrow) {
-    font-size: 12px;
-    max-width: 240px;
-    position: relative;
-    z-index: 1;
+    display: none;
   }
-  .tasting-stein {
+  .tasting-poster {
     position: absolute;
-    bottom: -33px;
-    right: -43px;
-    width: 170px;
+    top: 20px;
+    right: 9px;
+    width: 95px;
+    max-width: none;
     margin: 0;
-    opacity: 0.3;
+    padding: 0;
+    background: none;
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+  }
+  .tasting-poster .poster-kicker,
+  .tasting-poster figcaption {
+    display: none;
   }
   .hero-pill {
     font-size: 9px;
     position: relative;
     z-index: 1;
+    margin-top: 12px;
   }
   .progress-panel {
     gap: 10px;
-    padding: 16px;
+    padding: 12px;
     flex-wrap: wrap;
-    margin: 17px 0 28px;
+    margin: 14px 0 22px;
   }
   .progress-copy strong {
     font-size: 12px;
@@ -1553,6 +1711,7 @@ fieldset {
     gap: 5px;
     margin-top: 17px;
     padding-bottom: 12px;
+    margin-bottom: 14px;
   }
   .filter-tabs button {
     font-size: 10px;
@@ -1565,61 +1724,180 @@ fieldset {
     font-size: 9px;
   }
   .beer-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .beer-card {
+    display: grid;
+    grid-template-columns: 60px minmax(0, 1fr);
     gap: 12px;
+    padding: 12px;
+    align-items: start;
+  }
+  .beer-card:hover {
+    transform: none;
   }
   .beer-picture {
-    height: 160px;
+    height: 80px;
+    border: 0;
+    border-radius: 1px;
+  }
+  .beer-picture > img {
+    padding: 3px;
   }
   .beer-card-body {
-    padding: 15px;
+    padding: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px 32px;
+    gap: 0 6px;
+    align-items: center;
   }
   .beer-card h3 {
-    font-size: 23px;
+    font-size: 19px;
+    margin-bottom: 6px;
+  }
+  .beer-details {
+    margin-bottom: 0;
+  }
+  .beer-origin {
+    font-size: 10px;
   }
   .brewery {
     font-size: 8px;
-    letter-spacing: 1px;
+    letter-spacing: 0.7px;
+    margin-bottom: 4px;
   }
   .beer-meta {
-    font-size: 9px;
+    font-size: 10px;
     gap: 5px;
     flex-wrap: wrap;
+    margin-bottom: 0;
   }
   .beer-description {
+    display: none;
+  }
+  .beer-actions {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .beer-actions .rate-button {
+    margin: 0;
+    width: auto;
+    min-width: 44px;
+    min-height: 44px;
     font-size: 11px;
+    padding: 9px;
+    justify-content: center;
   }
-  .rate-button {
-    font-size: 10px;
-    padding: 9px 10px;
+  .beer-card.has-notes {
+    cursor: pointer;
   }
+  .notes-toggle {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .beer-card:has(.notes-toggle:focus-visible) {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  .mobile-rating-notes:not([hidden]) {
+    display: block;
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--muted);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .rate-label,
   .rate-button > svg {
-    width: 13px;
+    display: none;
+  }
+  .rate-label-short {
+    display: inline;
+  }
+  .my-rating {
+    grid-column: 3;
+    grid-row: 1;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    text-align: right;
+  }
+  .my-rating > span {
+    display: block;
+  }
+  .rating-caption {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .my-rating strong {
+    font-size: 24px;
+    line-height: 1.1;
+  }
+  .my-rating small {
+    display: block;
+    font-size: 9px;
+    margin: 2px 0 0;
+  }
+  .my-rating p {
+    display: none;
+  }
+  .beer-status:not(.rated) {
+    display: none;
   }
   .beer-status {
-    font-size: 8px;
-    left: 8px;
-    top: 8px;
-    padding: 4px 6px;
+    font-size: 7px;
+    left: 3px;
+    top: 3px;
+    padding: 3px;
+    gap: 2px;
   }
-  .label-ornament {
+  .beer-status svg {
+    width: 10px;
+    height: 10px;
+  }
+  .personal-rank {
+    top: auto;
+    bottom: 3px;
+    right: 3px;
+    font-size: 12px;
+    padding: 2px 5px;
+  }
+  .label-top,
+  .label-bottom,
+  .art-number {
     display: none;
   }
   .bottle-label {
-    width: 82px;
-    height: 110px;
-    margin-top: 8px;
+    width: 37px;
+    height: 48px;
+    margin: 0;
+    outline-offset: 2px;
   }
   .label-monogram {
-    font-size: 45px;
+    font-size: 29px;
   }
   .beer-art::before {
-    left: calc(50% - 88px);
-    font-size: 58px;
+    inset: 4px;
   }
   .beer-art::after {
-    right: calc(50% - 88px);
-    font-size: 58px;
+    display: none;
   }
   .tasting-tip p {
     font-size: 12px;
@@ -1691,6 +1969,10 @@ fieldset {
     display: flex;
     flex-direction: column-reverse;
   }
+  .origin-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
   .champion-panel,
   .leaderboard {
     width: 100%;
@@ -1730,9 +2012,6 @@ fieldset {
   .rank-details p {
     font-size: 10px;
   }
-  .provisional {
-    margin: 4px 0 0 6px;
-  }
   .live-status {
     line-height: 1.8;
     font-size: 8px;
@@ -1749,8 +2028,8 @@ fieldset {
   .qr-copy > p:not(.eyebrow) {
     font-size: 18px;
   }
-  .qr-stein {
-    width: 175px;
+  .qr-poster {
+    width: 170px;
   }
   .qr-card {
     padding: 28px 18px;
@@ -1760,21 +2039,6 @@ fieldset {
   }
 }
 @media (max-width: 380px) {
-  .beer-grid {
-    grid-template-columns: 1fr;
-  }
-  .beer-picture {
-    height: 180px;
-  }
-  .beer-card h3 {
-    font-size: 26px;
-  }
-  .beer-card-body {
-    padding: 20px;
-  }
-  .rate-button {
-    font-size: 12px;
-  }
   .filter-tabs button {
     font-size: 10px;
   }
@@ -1793,7 +2057,7 @@ fieldset {
     font-size: 34px;
   }
   .tasting-hero h1 {
-    font-size: 30px;
+    font-size: 25px;
   }
   .score-grid {
     gap: 5px;

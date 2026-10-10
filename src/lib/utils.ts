@@ -1,8 +1,18 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { BeerResult } from './types';
+import type { BeerOrigin, BeerResult } from './types';
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
+export const formatOrigin = ({ country, state }: BeerOrigin) =>
+  country === 'US' && state?.trim() ? `US - ${state.trim()}` : country;
+
+export function originAverage(beers: BeerResult[]) {
+  const rated = beers.filter((beer) => beer.rating_count > 0 && beer.average_score !== null);
+  return rated.length
+    ? rated.reduce((total, beer) => total + beer.average_score!, 0) / rated.length
+    : null;
+}
+
 export const sortResults = (beers: BeerResult[]) =>
   [...beers].sort(
     (a, b) =>

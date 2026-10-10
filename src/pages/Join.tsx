@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Beer, Check, PencilLine, Trophy } from 'lucide-react';
-import { Stein } from '../components/Illustration';
+import { BeerPoster } from '../components/Illustration';
 import { Button } from '../components/ui/button';
 import { ErrorMessage, Loading } from '../components/Status';
 import { useSession } from '../lib/session';
@@ -25,7 +25,7 @@ const steps = [
   },
 ];
 export function Join() {
-  const { guest, loading, error: sessionError, retry, setGuest } = useSession();
+  const { guest, loading, error: sessionError, unavailable, retry, reset, setGuest } = useSession();
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -67,7 +67,7 @@ export function Join() {
           </p>
           <span className="hero-signoff">EIN PROSIT DER GEMÜTLICHKEIT</span>
         </div>
-        <Stein className="hero-stein" />
+        <BeerPoster className="welcome-poster" />
         <div className="hero-corner top-left" />
         <div className="hero-corner bottom-right" />
       </section>
@@ -83,14 +83,49 @@ export function Join() {
           {loading ? (
             <Loading text="Finding your seat…" />
           ) : sessionError ? (
-            <ErrorMessage message={sessionError} retry={retry} />
+            <>
+              <ErrorMessage message={sessionError} retry={retry} />
+              {unavailable && (
+                <>
+                  <p className="small muted">
+                    Starting fresh will not recover the previous guest’s ratings.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="full-width"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          'Start a new guest session on this browser? Previous ratings will not be recovered.',
+                        )
+                      )
+                        reset();
+                    }}
+                  >
+                    Start a new guest session
+                  </Button>
+                </>
+              )}
+            </>
           ) : guest ? (
-            <Button asChild className="full-width">
-              <Link to="/taste">
-                Continue as {guest.display_name}
-                <ArrowRight size={18} />
-              </Link>
-            </Button>
+            <>
+              <Button asChild className="full-width">
+                <Link to="/taste">
+                  Continue as {guest.display_name}
+                  <ArrowRight size={18} />
+                </Link>
+              </Button>
+              <details className="guest-details">
+                <summary>Device guest details</summary>
+                <p>
+                  Guest reference: <code>{guest.id}</code>
+                </p>
+                <p>
+                  The host can match this reference to the guest ID in PocketBase. Names can be
+                  shared.
+                </p>
+              </details>
+            </>
           ) : (
             <form onSubmit={submit}>
               <label htmlFor="guest-name">What should we call you?</label>

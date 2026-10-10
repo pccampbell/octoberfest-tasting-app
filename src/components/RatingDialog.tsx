@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { ErrorMessage } from './Status';
 import { friendlyError, pb, saveRating, withGuest } from '../lib/pocketbase';
 import type { Beer, Rating } from '../lib/types';
+import { formatOrigin } from '../lib/utils';
 
 export function RatingDialog({
   beer,
@@ -84,10 +85,11 @@ export function RatingDialog({
         <p className="eyebrow">{rating ? 'REVISIT YOUR POUR' : 'A MOMENT FOR YOUR POUR'}</p>
         <DialogTitle className="dialog-title">{beer.name}</DialogTitle>
         <DialogDescription className="muted">
-          {[beer.brewery, beer.style, beer.abv ? `${beer.abv}% ABV` : '']
+          {[beer.brewery, formatOrigin(beer), beer.style, beer.abv ? `${beer.abv}% ABV` : '']
             .filter(Boolean)
             .join(' · ')}
         </DialogDescription>
+        {beer.description && <p className="dialog-beer-description">{beer.description}</p>}
         <form onSubmit={submit}>
           <fieldset disabled={busy}>
             <legend>How’s the beer?</legend>

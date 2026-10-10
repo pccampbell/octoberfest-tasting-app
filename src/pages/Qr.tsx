@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { Stein } from '../components/Illustration';
+import { BeerPoster } from '../components/Illustration';
 import { Button } from '../components/ui/button';
 import { ErrorMessage, Loading } from '../components/Status';
 import { pb, friendlyError } from '../lib/pocketbase';
@@ -52,8 +52,7 @@ export function Qr() {
             <br />
             Raise a glass.
           </p>
-          <Stein className="qr-stein" />
-          <div className="hero-signoff">GUT BIER. GUTE ZEITEN.</div>
+          <BeerPoster className="qr-poster" />
         </div>
         <div className="qr-card">
           <p className="eyebrow">YOUR EVENING STARTS HERE</p>

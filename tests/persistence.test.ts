@@ -11,30 +11,33 @@ it('ratings survive server restarts, repeated migrations, and built-in backup re
   const root = resolve('.test-data', `persistence-${Date.now()}`);
   const dir = join(root, 'original');
   const restored = join(root, 'restored');
+  const initialMigrations = join(root, 'initial-migrations');
   await mkdir(dir, { recursive: true });
+  await mkdir(initialMigrations, { recursive: true });
+  await cp('pb_migrations/1791500000_tasting.js', join(initialMigrations, '1791500000_tasting.js'));
   const email = 'backup-host@example.invalid';
   const password = randomBytes(32).toString('hex');
-  const run = (args: string[]) => {
+  const run = (args: string[], migrations = 'pb_migrations') => {
     const command = spawnSync(
       binary,
-      [...args, `--dir=${dir}`, '--migrationsDir=pb_migrations', '--hooksDir=pb_hooks'],
+      [...args, `--dir=${dir}`, `--migrationsDir=${migrations}`, '--hooksDir=pb_hooks'],
       { encoding: 'utf8' },
     );
     expect(command.status, command.stderr).toBe(0);
   };
-  run(['migrate', 'up']);
-  run(['superuser', 'create', email, password]);
+  run(['migrate', 'up'], initialMigrations);
+  run(['superuser', 'create', email, password], initialMigrations);
   let server: ChildProcess | null = null;
   const pb = new PocketBase('http://127.0.0.1:8092');
   pb.autoCancellation(false);
-  async function start(data: string) {
+  async function start(data: string, migrations = 'pb_migrations') {
     server = spawn(
       binary,
       [
         'serve',
         '--http=127.0.0.1:8092',
         `--dir=${data}`,
-        '--migrationsDir=pb_migrations',
+        `--migrationsDir=${migrations}`,
         '--hooksDir=pb_hooks',
         '--automigrate=0',
       ],
@@ -59,7 +62,7 @@ it('ratings survive server restarts, repeated migrations, and built-in backup re
     }
   }
   try {
-    await start(dir);
+    await start(dir, initialMigrations);
     await pb.collection('_superusers').authWithPassword(email, password);
     const beer = await pb.collection('beers').create({ name: 'Backup Festbier', is_active: true });
     const guestEmail = `g-${randomBytes(16).toString('hex')}@tasting.invalid`;
@@ -75,6 +78,24 @@ it('ratings survive server restarts, repeated migrations, and built-in backup re
       score: 9,
       notes: 'Survives a restart and restore',
     });
+    await stop();
+    run(['migrate', 'up']); // Ordinary deployment never resets data.
+    run(['migrate', 'up']); // Reapplying does not duplicate fields or reset records.
+    await start(dir);
+    await pb.collection('_superusers').authWithPassword(email, password);
+    expect(await pb.collection('ratings').getOne(rating.id)).toMatchObject({
+      score: 9,
+      notes: rating.notes,
+      guest: g.id,
+    });
+    expect(await pb.collection('beers').getOne(beer.id)).toMatchObject({ country: '', state: '' });
+    await pb.collection('beers').update(beer.id, { country: 'US', state: 'Wisconsin' });
+    expect(await pb.collection('beer_results').getOne(beer.id)).toMatchObject({
+      country: 'US',
+      state: 'Wisconsin',
+      average_score: 9,
+      rating_count: 1,
+    });
     const backupName = 'verified-tasting-backup.zip';
     await pb.backups.create(backupName);
     const backupPath = join(dir, 'backups', backupName);
@@ -83,15 +104,6 @@ it('ratings survive server restarts, repeated migrations, and built-in backup re
         break;
       await new Promise((r) => setTimeout(r, 100));
     }
-    await stop();
-    run(['migrate', 'up']); // Ordinary deployment never resets data.
-    await start(dir);
-    await pb.collection('_superusers').authWithPassword(email, password);
-    expect(await pb.collection('ratings').getOne(rating.id)).toMatchObject({
-      score: 9,
-      notes: rating.notes,
-      guest: g.id,
-    });
     await stop();
     await mkdir(restored, { recursive: true });
     const extracted =
@@ -120,7 +132,12 @@ it('ratings survive server restarts, repeated migrations, and built-in backup re
       total_ratings: 1,
       participants: 1,
     });
-    expect((await pb.collection('beer_results').getOne(beer.id)).average_score).toBe(9);
+    expect(await pb.collection('beer_results').getOne(beer.id)).toMatchObject({
+      country: 'US',
+      state: 'Wisconsin',
+      average_score: 9,
+      rating_count: 1,
+    });
     await stop();
     // A stopped full-directory snapshot is also a safe, documented backup option.
     await cp(restored, join(root, 'stopped-snapshot'), { recursive: true });
