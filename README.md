@@ -36,7 +36,7 @@ The image supports Linux amd64 and arm64. It runs as UID/GID `10001`, with Pocke
 
 To deploy an update, take a backup, then repeat `docker compose up -d --build`. Migrations run transactionally once and do not seed or reset records. **Do not remove the data volume or run `docker compose down -v`.** Keep the old image tag and backup when upgrading PocketBase; schema compatibility must be checked before downgrading.
 
-For internet access, use HTTPS through your existing reverse proxy and configure trusted proxy headers in PocketBase settings. Rate limiting is enabled by migration, with guest-auth limits sized for shared-network arrivals. Review limits for your guest count. Restrict the admin interface to the host/network using your existing network controls. Local guest identities need a stable origin: switching hostname, port, HTTP/HTTPS, browser, or device creates a different browser storage area.
+For internet access on the Windows home server, follow [the Cloudflare deployment guide](deploy/CLOUDFLARE.md). It adds a restricted public gateway while keeping administration on localhost. Local guest identities need a stable origin: switching hostname, port, HTTP/HTTPS, browser, or device creates a different browser storage area.
 
 ## Develop locally
 

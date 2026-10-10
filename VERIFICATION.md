@@ -32,6 +32,8 @@ The current app passed a full Docker image rebuild from the repository Dockerfil
 
 ## Before the party
 
+The optional Windows/Cloudflare deployment was tested in a separate `cloudflare-readiness` Docker project with its own database. The Compose override bound both app administration and the public gateway only to localhost, even when the test environment specified `HOST_BIND=0.0.0.0`. Both containers became healthy, and Nginx configuration validation passed. Browser checks through the gateway covered guest registration, saved ratings after reload, expanded notes, results updates, and the QR configured for `https://beer.pccampbell.org`. Uploaded images were accessible. Fifteen management/unknown routes, including encoded admin paths and superuser endpoints, returned 404 even with a valid disposable admin token; local administration remained available. PocketBase logs confirmed that the gateway supplied the Cloudflare visitor IP instead of a caller-supplied `X-Real-IP`. Domain activation, the actual Windows tunnel service, external HTTPS, and cellular access still require verification on the home server.
+
 - Repeat the full image build, container recreation, and saved-rating checks on the target Docker host. Local image build, startup, health, and aggregate counts survived recreation.
 - No physical phone, camera scanner, TV, or separate LAN device was available. Confirm the final public URL, Wi-Fi/firewall access, QR scanning on iOS/Android, and fullscreen display on your actual equipment.
 - Add the actual beer lineup through PocketBase, verify a few saved ratings, and create/download a backup before guests arrive.
